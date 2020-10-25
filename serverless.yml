@@ -1,0 +1,67 @@
+# NOTE: update this with your service name
+service: pic1cy-backend
+
+# Create an optimized package for our functions 
+package:
+  individually: true
+
+plugins:
+  - serverless-bundle # Package our functions with Webpack
+  - serverless-offline
+  - serverless-dotenv-plugin # Load .env as environment variables
+
+custom:
+  # Our stage is based on what is passed in when running serverless
+  # commands. Or fallsback to what we have set in the provider section.
+  stage: ${opt:stage, self:provider.stage}
+  # Set the table name here so we can use it while testing locally
+  questionTableName: ${self:custom.stage}-4Pic1Cy-Questions
+  questionPlayerTableName: ${self:custom.stage}-4Pic1Cy-Question-Player
+  playerTableName: ${self:custom.stage}-4Pic1Cy-Player
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: prod
+  region: ap-southeast-1
+  # To load environment variables externally
+  # rename env.example to .env and uncomment
+  # the following line. Also, make sure to not
+  # commit your .env.
+  #
+  #environment:
+  #  SAMPLE_ENV_VAR: ${env:SAMPLE_ENV_VAR}
+  # These environment variables are made available to our functions
+  # under process.env.
+  environment:
+    tableName: ${self:custom.questionTableName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      # Restrict our IAM role permissions to
+      # the specific table for the stage
+      Resource: 
+        - "Fn::GetAtt": [QuestionsTable, Arn]
+        - "Fn::GetAtt": [QuestionPlayerTable, Arn]
+        - "Fn::GetAtt": [PlayerTable, Arn]
+
+functions:
+  list-question:
+    handler: questions.list
+    events:
+      - http:
+          path: questions
+          method: get
+          cors: true
+          # authorizer: aws_iam
+
+resources:
+  # DynamoDB
+  - ${file(resources/dynamodb-table.yml)}
