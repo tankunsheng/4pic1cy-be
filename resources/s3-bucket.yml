@@ -1,0 +1,47 @@
+Resources:
+  4Pic1CyImagesBucketAllowPublicReadPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: { "Ref": "4Pic1CyImages" }
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:GetObject"
+            Resource:
+              "Fn::Join":
+                - ""
+                - - "arn:aws:s3:::"
+                  - Ref: 4Pic1CyImages
+                  - /*
+            Principal: "*"
+  4Pic1CyImages:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:custom.imageBucketName}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      # Set the CORS policy
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - "*"
+            AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            MaxAge: 3000
+
+# Print out the name of the bucket that is created
+Outputs:
+  4Pic1CyImages:
+    Value:
+      Ref: 4Pic1CyImages

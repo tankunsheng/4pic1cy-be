@@ -3,9 +3,9 @@ import * as dynamoDbLib from "./libs/dynamodb-lib";
 import { success, failure } from "./libs/response-lib";
 
 export async function list() {
-    console.log(process.env.tableName);
+    console.log(process.env.questionTableName);
     const params = {
-        TableName: process.env.tableName,
+        TableName: process.env.questionTableName,
 
     };
 
