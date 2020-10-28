@@ -17,7 +17,6 @@ custom:
   imageBucketName: ${self:custom.stage}-4pic1cy-images
   # Set the table name here so we can use it while testing locally
   questionTableName: ${self:custom.stage}-4Pic1Cy-Questions
-  questionPlayerTableName: ${self:custom.stage}-4Pic1Cy-Question-Player
   playerTableName: ${self:custom.stage}-4Pic1Cy-Player
 
 provider:
@@ -51,7 +50,6 @@ provider:
       # the specific table for the stage
       Resource:
         - "Fn::GetAtt": [QuestionsTable, Arn]
-        - "Fn::GetAtt": [QuestionPlayerTable, Arn]
         - "Fn::GetAtt": [PlayerTable, Arn]
 
 functions:
@@ -70,10 +68,18 @@ functions:
           path: players
           method: put
           cors: true
-          # authorizer: aws_iam
+  get-qns:
+    handler: questions.getNewQnsForPlayer
+    events:
+      - http:
+          path: questions/player
+          method: post
+          cors: true
 
 resources:
   # DynamoDB
   - ${file(resources/dynamodb-table.yml)}
     # S3
   - ${file(resources/s3-bucket.yml)}
+  # API Gateway Errors
+  - ${file(resources/api-gateway-errors.yml)}

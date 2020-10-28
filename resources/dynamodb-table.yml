@@ -4,25 +4,14 @@ Resources:
     Properties:
       TableName: ${self:custom.questionTableName}
       AttributeDefinitions:
-        - AttributeName: answer 
+        - AttributeName: qId 
           AttributeType: S
       KeySchema:
-        - AttributeName: answer
+        - AttributeName: qId
           KeyType: HASH
       # Set the capacity to auto-scale
       BillingMode: PAY_PER_REQUEST
-  QuestionPlayerTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: ${self:custom.questionPlayerTableName}
-      AttributeDefinitions:
-        - AttributeName: player_sub_answer 
-          AttributeType: S
-      KeySchema:
-        - AttributeName: player_sub_answer
-          KeyType: HASH
-      # Set the capacity to auto-scale
-      BillingMode: PAY_PER_REQUEST
+      
   PlayerTable:
     Type: AWS::DynamoDB::Table
     Properties:
