@@ -102,6 +102,7 @@ async function getNewQuestion(answered) {
         const result = await dynamoDbLib.call("scan", params);
         const randomPos = Math.round(Math.random() * (result.Items.length - 1));
         const randomItem = result.Items[randomPos];
+        delete randomItem["answer"];
         return success(randomItem);
     } catch (e) {
         //return the e msg instead
