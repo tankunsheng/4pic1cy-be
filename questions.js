@@ -14,42 +14,34 @@ async function verify(token) {
     return ticket.getPayload();
 }
 
-export async function list() {
-    console.log(process.env.questionTableName);
+// /*
+// * AWS_PROFILE=kunsheng sls invoke local --function check-ans --path mocks/check-answer.json
+// */
+export async function checkAnswer(event) {
+    const data = JSON.parse(event.body);
+    const user = await verify(data.token).catch(console.error);
+    if (!user) {
+        return;
+    }
+    // user.sub
     const params = {
         TableName: process.env.questionTableName,
-
-    };
-
-    try {
-        const result = await dynamoDbLib.call("scan", params);
-        // Return the matching list of items in response body
-        return success(result.Items);
-    } catch (e) {
-        console.log(e);
-        return failure({ status: false });
-    }
-}
-export async function get(event) {
-    console.log(process.env.blogTableName);
-    console.log(event.pathParameters);
-    console.log(event.pathParameters.blogid);
-    const params = {
-        TableName: process.env.blogTableName,
-        IndexName: 'blogId-index',
-        KeyConditionExpression: 'blogId = :blogId',
-        ExpressionAttributeValues: {
-            ':blogId': event.pathParameters.blogid
+        Key: {
+            qId: data.qId
         }
     };
-
     try {
-        const result = await dynamoDbLib.call("query", params);
-        // Return the matching list of items in response body
-        return success(result.Items);
+        const result = await dynamoDbLib.call("get", params);
+        if (result.Item.answer === data.answer) {
+            const updateResult = await addQnsAnsweredInPlayer(user.sub, data.qId);
+            console.log(updateResult);
+            return updateResult.statusCode === 200? success({result:true, msg: "correct answer!"}) : failure({result:false, msg: "error occurred"});
+        }else{
+            return success({result:true, msg: "wrong answer!"});
+        }
     } catch (e) {
         console.log(e);
-        return failure({ status: false });
+        return failure({ status: e });
     }
 }
 
@@ -104,6 +96,30 @@ async function getNewQuestion(answered) {
         const randomItem = result.Items[randomPos];
         delete randomItem["answer"];
         return success(randomItem);
+    } catch (e) {
+        //return the e msg instead
+        console.log(e);
+        return failure({ status: e });
+    }
+}
+async function addQnsAnsweredInPlayer(player_sub, qId) {
+    let params = {
+        TableName: process.env.playerTableName,
+        Key: {
+            player_sub: player_sub
+        },
+        UpdateExpression: 'set #answered = list_append(if_not_exists(#answered, :empty_list), :qId)',
+        ExpressionAttributeNames: {
+            '#answered': 'answered'
+        },
+        ExpressionAttributeValues: {
+            ':qId': [qId],
+            ':empty_list': []
+        }
+    };
+    try {
+        await dynamoDbLib.call("update", params);
+        return success(true);
     } catch (e) {
         //return the e msg instead
         console.log(e);

@@ -53,14 +53,6 @@ provider:
         - "Fn::GetAtt": [PlayerTable, Arn]
 
 functions:
-  list-question:
-    handler: questions.list
-    events:
-      - http:
-          path: questions
-          method: get
-          cors: true
-          # authorizer: aws_iam
   add-user:
     handler: players.add
     events:
@@ -73,6 +65,13 @@ functions:
     events:
       - http:
           path: questions/player
+          method: post
+          cors: true
+  check-ans:
+    handler: questions.checkAnswer
+    events:
+      - http:
+          path: questions
           method: post
           cors: true
 
