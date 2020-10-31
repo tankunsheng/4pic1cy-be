@@ -88,6 +88,9 @@ export async function listPlayerHighscores(event) {
                 score: eachPlayer.answered? eachPlayer.answered.length : 0
             };
         });
+        results.sort((first, second) => {
+            return second.score - first.score;
+        });
         console.log(results);
         return success(results);
     } catch (e) {
