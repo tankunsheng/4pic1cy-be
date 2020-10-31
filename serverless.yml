@@ -67,6 +67,13 @@ functions:
           path: players/{token}
           method: get
           cors: true
+  list-player-highscores:
+    handler: players.listPlayerHighscores
+    events:
+      - http:
+          path: players
+          method: get
+          cors: true
   get-qns:
     handler: questions.getNewQnsForPlayer
     events:

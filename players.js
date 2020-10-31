@@ -68,3 +68,31 @@ export async function get(event) {
         return failure({ status: e });
     }
 }
+
+// /*
+// * AWS_PROFILE=kunsheng sls invoke local --function list-player-highscores
+// */
+export async function listPlayerHighscores(event) {
+    const params = {
+        TableName: process.env.playerTableName,
+        AttributesToGet: [
+            'username',
+            'answered'
+        ]
+    };
+    try {
+        const players = await dynamoDbLib.call("scan", params);
+        const results = players.Items.map(eachPlayer => {
+            return {
+                username: eachPlayer.username,
+                score: eachPlayer.answered? eachPlayer.answered.length : 0
+            };
+        });
+        console.log(results);
+        return success(results);
+    } catch (e) {
+        //return the e msg instead
+        console.log(e);
+        return failure({ status: e });
+    }
+}
