@@ -37,7 +37,7 @@ export async function checkAnswer(event) {
             console.log(updateResult);
             return updateResult.statusCode === 200? success({result:true, msg: "correct answer!"}) : failure({result:false, msg: "error occurred"});
         }else{
-            return success({result:true, msg: "wrong answer!"});
+            return success({result:false, msg: "wrong answer!"});
         }
     } catch (e) {
         console.log(e);
@@ -63,6 +63,9 @@ export async function getNewQnsForPlayer(event) {
 
     try {
         const result = await dynamoDbLib.call("get", params);
+        console.log(`SUB IS ${user.sub}`);
+        console.log(`RESULT ${result.Item}`);
+        console.log(`RESULT ANSWERED ${result.Item.answered}`);
         const qns = await getNewQuestion(result.Item.answered);
         return success(qns);
     } catch (e) {

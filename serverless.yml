@@ -60,6 +60,13 @@ functions:
           path: players
           method: put
           cors: true
+  get-player:
+    handler: players.get
+    events:
+      - http:
+          path: players/{token}
+          method: get
+          cors: true
   get-qns:
     handler: questions.getNewQnsForPlayer
     events:

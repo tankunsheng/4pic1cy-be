@@ -44,3 +44,27 @@ export async function add(event) {
         return failure({ status: e });
     }
 }
+// /*
+// * AWS_PROFILE=kunsheng sls invoke local --function get-user --path mocks/get-user.json
+// */
+export async function get(event) {
+    console.log(event);
+    const data = event.pathParameters;
+    console.log(data);
+    const user = await verify(data.token).catch(console.error);
+    const params = {
+        TableName: process.env.playerTableName,
+        Key: {
+            player_sub: user.sub
+        }
+    };
+    try {
+        const player = await dynamoDbLib.call("get", params);
+        console.log(player);
+        return success(player.Item);
+    } catch (e) {
+        //return the e msg instead
+        console.log(e);
+        return failure({ status: e });
+    }
+}
