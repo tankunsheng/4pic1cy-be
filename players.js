@@ -102,7 +102,7 @@ export async function listPlayerHighscores(event) {
         return failure({ status: e });
     }
 }
-//AWS_PROFILE=kunsheng sls invoke local --function get-hint --path mocks/get-user-qns-hint.json
+//  sls invoke local --function get-hint --path mocks/get-user-qns-hint.json
 export async function getHint(event) {
     const resp = await get(event);
     const player = JSON.parse(resp.body);
@@ -112,10 +112,13 @@ export async function getHint(event) {
     const question = JSON.parse(qnsResp.body);
     if (player.hints && player.hints[qId] !== undefined) {
         const unlockedHintPos = player.hints[qId];
-        return success(question.answer[unlockedHintPos]);
+        return success({
+            "hint": question.answer[unlockedHintPos],
+            "pos": unlockedHintPos
+        });
     } else {
-        const hintCharacter = await newHintForPlayerByQns(player.player_sub, question);
-        return success(hintCharacter);
+        const hintResp = await newHintForPlayerByQns(player.player_sub, question);
+        return success(hintResp);
     }
 }
 
@@ -146,14 +149,11 @@ async function newHintForPlayerByQns(playerSub, question) {
             ExpressionAttributeValues: { ":pos": randomPos },
             ConditionExpression: "attribute_not_exists(hints.#qId)",
         };
-        try {
-            await dynamoDbLib.call("update", hintPosToQID);
-            return question.answer[randomPos];
-        } catch (e) {
-            //return the e msg instead
-            console.log(e);
-            return failure({ status: e });
-        }
+        await dynamoDbLib.call("update", hintPosToQID);
+        return {
+            "hint": question.answer[randomPos],
+            "pos": randomPos
+        };
     } catch (e) {
         //return the e msg instead
         console.log(e);
