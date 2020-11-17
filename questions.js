@@ -35,9 +35,9 @@ export async function checkAnswer(event) {
         if (result.Item.answer === data.answer) {
             const updateResult = await addQnsAnsweredInPlayer(user.sub, data.qId);
             console.log(updateResult);
-            return updateResult.statusCode === 200? success({result:true, msg: "correct answer!"}) : failure({result:false, msg: "error occurred"});
-        }else{
-            return success({result:false, msg: "wrong answer!"});
+            return updateResult.statusCode === 200 ? success({ result: true, msg: "correct answer!" }) : failure({ result: false, msg: "error occurred" });
+        } else {
+            return success({ result: false, msg: "wrong answer!" });
         }
     } catch (e) {
         console.log(e);
@@ -129,3 +129,20 @@ async function addQnsAnsweredInPlayer(player_sub, qId) {
         return failure({ status: e });
     }
 }
+export async function getQnsById(qId) {
+    const params = {
+        TableName: process.env.questionTableName,
+        Key: {
+            qId: qId
+        }
+    };
+    try {
+        const question = await dynamoDbLib.call("get", params);
+        return success(question.Item);
+    } catch (e) {
+        //return the e msg instead
+        console.log(e);
+        return failure({ status: e });
+    }
+}
+

@@ -88,6 +88,13 @@ functions:
           path: questions
           method: post
           cors: true
+  get-hint:
+    handler: players.getHint
+    events:
+      - http:
+          path: players/{token}/{qId}
+          method: get
+          cors: true
 
 resources:
   # DynamoDB
