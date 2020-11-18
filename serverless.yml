@@ -92,7 +92,7 @@ functions:
     handler: players.getHint
     events:
       - http:
-          path: players/{token}/{qId}
+          path: players/{token}/{qId}/{new}
           method: get
           cors: true
 

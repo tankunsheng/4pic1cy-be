@@ -107,6 +107,7 @@ export async function getHint(event) {
     const resp = await get(event);
     const player = JSON.parse(resp.body);
     const qId = event.pathParameters.qId;
+    const isNew = event.pathParameters.new;
 
     const qnsResp = await getQnsById(qId);
     const question = JSON.parse(qnsResp.body);
@@ -116,9 +117,11 @@ export async function getHint(event) {
             "hint": question.answer[unlockedHintPos],
             "pos": unlockedHintPos
         });
-    } else {
+    } else if (isNew) {
         const hintResp = await newHintForPlayerByQns(player.player_sub, question);
         return success(hintResp);
+    } else {
+        return success("no hints yet!");
     }
 }
 
