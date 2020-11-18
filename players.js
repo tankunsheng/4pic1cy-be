@@ -114,14 +114,17 @@ export async function getHint(event) {
     if (player.hints && player.hints[qId] !== undefined) {
         const unlockedHintPos = player.hints[qId];
         return success({
+            "success": true,
             "hint": question.answer[unlockedHintPos],
             "pos": unlockedHintPos
         });
-    } else if (isNew) {
+    } else if (isNew === "true") {
         const hintResp = await newHintForPlayerByQns(player.player_sub, question);
         return success(hintResp);
     } else {
-        return success("no hints yet!");
+        return success({
+            "success": false
+        });
     }
 }
 
@@ -154,6 +157,7 @@ async function newHintForPlayerByQns(playerSub, question) {
         };
         await dynamoDbLib.call("update", hintPosToQID);
         return {
+            "success": true,
             "hint": question.answer[randomPos],
             "pos": randomPos
         };
