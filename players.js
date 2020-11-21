@@ -134,6 +134,46 @@ export async function getHint(event) {
     }
 }
 
+/*
+* AWS_PROFILE=kunsheng sls invoke local --function add-review --path mocks/add-review.json
+* https://www.uuidgenerator.net/version4
+*/
+export async function addReview(event) {
+    const data = JSON.parse(event.body);
+    const user = await verify(data.token).catch(console.error);
+    if (!user) {
+        return;
+    }
+    const params = {
+        TableName: process.env.playerTableName,
+        Key: {
+            player_sub: user.sub
+        },
+        // Item: {
+        //     review: data.review,
+        //     rating: data.rating
+        // }
+        UpdateExpression: 'set #review = :review, #rating = :rating',
+        ExpressionAttributeNames: {
+            '#review': 'review',
+            '#rating': 'rating'
+        },
+        ExpressionAttributeValues: {
+            ':review': data.review,
+            ':rating':  data.rating
+        }
+    };
+
+    try {
+        await dynamoDbLib.call("update", params);
+        return success(params.Item);
+    } catch (e) {
+        //return the e msg instead
+        console.log(e);
+        return failure({ status: e });
+    }
+}
+
 async function newHintForPlayerByQns(playerSub, question) {
     const randomPos = Math.floor(Math.random() * (3 - 0 + 1) + 0);
     const createEmptyObjectInHintField = {

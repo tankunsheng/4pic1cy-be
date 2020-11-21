@@ -95,6 +95,13 @@ functions:
           path: players/{token}/{qId}/{new}
           method: get
           cors: true
+  add-review:
+    handler: players.addReview
+    events:
+      - http:
+          path: players/review
+          method: put
+          cors: true
 
 resources:
   # DynamoDB
