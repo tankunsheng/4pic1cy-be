@@ -102,6 +102,13 @@ functions:
           path: players/review
           method: put
           cors: true
+  get-reviews:
+    handler: players.getReviews
+    events:
+      - http:
+          path: players/reviews
+          method: get
+          cors: true
 
 resources:
   # DynamoDB

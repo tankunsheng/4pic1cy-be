@@ -171,6 +171,27 @@ export async function addReview(event) {
         return failure({ "success": true, status: e });
     }
 }
+//AWS_PROFILE=kunsheng sls invoke local --function get-reviews
+export async function getReviews() {
+    const params = {
+        TableName: process.env.playerTableName,
+        ProjectionExpression : [
+            '#name',
+            'review',
+            'rating',
+        ],
+        ExpressionAttributeNames : {'#name': 'name'},
+        FilterExpression: "attribute_exists(review)"
+    };
+    try {
+        const reviews = await dynamoDbLib.call("scan", params);
+        return success(reviews.Items);
+    } catch (e) {
+        //return the e msg instead
+        console.log(e);
+        return failure({ status: e });
+    }
+}
 
 async function newHintForPlayerByQns(playerSub, question) {
     const randomPos = Math.floor(Math.random() * (3 - 0 + 1) + 0);
