@@ -79,19 +79,25 @@ export async function listPlayerHighscores(event) {
         AttributesToGet: [
             'username',
             'answered',
-            'name'
+            'name',
+            'hints'
         ]
     };
     try {
         const players = await dynamoDbLib.call("scan", params);
         const results = players.Items.map(eachPlayer => {
+            console.log(eachPlayer);
             return {
                 name: eachPlayer.name,
                 username: eachPlayer.username,
-                score: eachPlayer.answered ? eachPlayer.answered.length : 0
+                score: eachPlayer.answered ? eachPlayer.answered.length : 0,
+                hints: eachPlayer.hints ? Object.keys(eachPlayer.hints).length : 0
             };
         });
         results.sort((first, second) => {
+            if(second.score === first.score){
+                return  first.hints - second.hints;
+            }
             return second.score - first.score;
         });
         console.log(results);
