@@ -95,8 +95,8 @@ export async function listPlayerHighscores(event) {
             };
         });
         results.sort((first, second) => {
-            if(second.score === first.score){
-                return  first.hints - second.hints;
+            if (second.score === first.score) {
+                return first.hints - second.hints;
             }
             return second.score - first.score;
         });
@@ -149,10 +149,6 @@ export async function addReview(event) {
         Key: {
             player_sub: user.sub
         },
-        // Item: {
-        //     review: data.review,
-        //     rating: data.rating
-        // }
         UpdateExpression: 'set #review = :review, #rating = :rating',
         ExpressionAttributeNames: {
             '#review': 'review',
@@ -160,17 +156,19 @@ export async function addReview(event) {
         },
         ExpressionAttributeValues: {
             ':review': data.review,
-            ':rating':  data.rating
+            ':rating': data.rating
         }
     };
 
     try {
         await dynamoDbLib.call("update", params);
-        return success(params.Item);
+        return success({
+            "success": true
+        });
     } catch (e) {
         //return the e msg instead
         console.log(e);
-        return failure({ status: e });
+        return failure({ "success": true, status: e });
     }
 }
 
