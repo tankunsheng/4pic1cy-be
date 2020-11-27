@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "google-auth-library": "^6.1.2",
-    "uuid": "^7.0.3"
+    "uuid": "^8.0.3"
   }
 }

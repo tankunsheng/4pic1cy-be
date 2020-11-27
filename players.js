@@ -4,6 +4,8 @@ import { success, failure } from "./libs/response-lib";
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client('498998227385-cvqhp70dbea43jeifi6o7t56g5sbmsa1.apps.googleusercontent.com');
 import { getQnsById } from "./questions.js";
+import { validate  } from "uuid";
+
 //https://developers.google.com/identity/sign-in/web/backend-auth
 async function verify(token) {
     const ticket = await client.verifyIdToken({
@@ -19,22 +21,29 @@ async function verify(token) {
 */
 export async function add(event) {
     const data = JSON.parse(event.body);
-    console.log("LOGGING");
-    console.log(data);
-    console.log(data.token);
-    const user = await verify(data.token).catch(console.error);
-    console.log(user);
-    console.log(process.env.playerTableName);
-    const params = {
-        TableName: process.env.playerTableName,
-        Item: {
-            player_sub: user.sub,
-            email: user.email,
-            name: user.name,
-            register_timestamp: Date.now()
-        }
-    };
-
+    let user = "";
+    let params = {};
+    if (data.token) {
+        user = await verify(data.token).catch(console.error);
+        params = {
+            TableName: process.env.playerTableName,
+            Item: {
+                player_sub: user.sub,
+                email: user.email,
+                name: user.name,
+                register_timestamp: Date.now()
+            }
+        };
+    } else {
+        params = {
+            TableName: process.env.playerTableName,
+            Item: {
+                player_sub: data.tempId,
+                name: data.tempId,
+                register_timestamp: Date.now()
+            }
+        };
+    }
     try {
         await dynamoDbLib.call("put", params);
         return success(params.Item);
@@ -48,20 +57,22 @@ export async function add(event) {
 // * AWS_PROFILE=kunsheng sls invoke local --function get-user --path mocks/get-user.json
 // */
 export async function get(event) {
-    // console.log(event);
     const data = event.pathParameters;
-    // console.log(data);
-    const user = await verify(data.token).catch(console.error);
-    // console.log(`user is ${user}`);
+    let playerId = "";
+    if(validate(data.token)){
+        playerId = data.token;
+    }else{
+        const user = await verify(data.token).catch(console.error);
+        playerId = user.sub;
+    }
     const params = {
         TableName: process.env.playerTableName,
         Key: {
-            player_sub: user.sub
+            player_sub: playerId
         }
     };
     try {
         const player = await dynamoDbLib.call("get", params);
-        // console.log(player);
         return success(player.Item);
     } catch (e) {
         //return the e msg instead
@@ -108,7 +119,7 @@ export async function listPlayerHighscores(event) {
         return failure({ status: e });
     }
 }
-//  sls invoke local --function get-hint --path mocks/get-user-qns-hint.json
+//  sls invoke local --function get-hint --path mocks/get-user-qns-hint-uuid.json
 export async function getHint(event) {
     const resp = await get(event);
     const player = JSON.parse(resp.body);
@@ -175,12 +186,12 @@ export async function addReview(event) {
 export async function getReviews() {
     const params = {
         TableName: process.env.playerTableName,
-        ProjectionExpression : [
+        ProjectionExpression: [
             '#name',
             'review',
             'rating',
         ],
-        ExpressionAttributeNames : {'#name': 'name'},
+        ExpressionAttributeNames: { '#name': 'name' },
         FilterExpression: "attribute_exists(review)"
     };
     try {

@@ -19,11 +19,17 @@ async function verify(token) {
 // */
 export async function checkAnswer(event) {
     const data = JSON.parse(event.body);
-    const user = await verify(data.token).catch(console.error);
-    if (!user) {
-        return;
+    // tempId
+    let playerId = "";
+    if(data.token){
+        const user = await verify(data.token).catch(console.error);
+        playerId = user.sub;
+        if (!user) {
+            return;
+        }
+    }else{
+        playerId = data.tempId;
     }
-    // user.sub
     const params = {
         TableName: process.env.questionTableName,
         Key: {
@@ -33,7 +39,7 @@ export async function checkAnswer(event) {
     try {
         const result = await dynamoDbLib.call("get", params);
         if (result.Item.answer === data.answer) {
-            const updateResult = await addQnsAnsweredInPlayer(user.sub, data.qId);
+            const updateResult = await addQnsAnsweredInPlayer(playerId, data.qId);
             console.log(updateResult);
             return updateResult.statusCode === 200 ? success({ result: true, msg: "correct answer!" }) : failure({ result: false, msg: "error occurred" });
         } else {
@@ -50,22 +56,28 @@ export async function checkAnswer(event) {
 // */
 export async function getNewQnsForPlayer(event) {
     const data = JSON.parse(event.body);
-    const user = await verify(data.token).catch(console.error);
-    if (!user) {
-        return;
-    }
-    const params = {
-        TableName: process.env.playerTableName,
-        Key: {
-            player_sub: user.sub
+    let params = {};
+    if (data.token) {
+        const user = await verify(data.token).catch(console.error);
+        if (!user) {
+            return;
         }
-    };
-
+        params = {
+            TableName: process.env.playerTableName,
+            Key: {
+                player_sub: user.sub
+            }
+        };
+    } else {
+        params = {
+            TableName: process.env.playerTableName,
+            Key: {
+                player_sub: data.tempId
+            }
+        };
+    }
     try {
         const result = await dynamoDbLib.call("get", params);
-        console.log(`SUB IS ${user.sub}`);
-        console.log(`RESULT ${result.Item}`);
-        console.log(`RESULT ANSWERED ${result.Item.answered}`);
         const qns = await getNewQuestion(result.Item.answered);
         return success(qns);
     } catch (e) {
