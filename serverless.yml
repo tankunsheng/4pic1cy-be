@@ -110,6 +110,14 @@ functions:
           method: get
           cors: true
 
+  transfer-progress:
+    handler: players.transferProgress
+    events:
+      - http:
+          path: players/{token}
+          method: put
+          cors: true
+
 resources:
   # DynamoDB
   - ${file(resources/dynamodb-table.yml)}

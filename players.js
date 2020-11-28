@@ -81,6 +81,53 @@ export async function get(event) {
     }
 }
 
+/*
+* AWS_PROFILE=kunsheng sls invoke local --function transfer-progress --path mocks/transfer-progress.json
+*/
+export async function transferProgress(event) {
+    const resp = await get(event);
+    const oldUserAcct = JSON.parse(resp.body);
+    const data = JSON.parse(event.body);
+    const user = await verify(data.token).catch(console.error);
+    if (!user) {
+        return;
+    }
+    const params = {
+        TableName: process.env.playerTableName,
+        Key: {
+            player_sub: user.sub
+        },
+        UpdateExpression: 'set #answered = :answered, #hints = :hints',
+        ExpressionAttributeNames: {
+            '#answered': 'answered',
+            '#hints': 'hints'
+        },
+        ExpressionAttributeValues: {
+            ':answered': oldUserAcct.answered || [],
+            ':hints': oldUserAcct.hints || {}
+        }
+    };
+    try {
+        await dynamoDbLib.call("update", params);
+        //delete old player record
+        const deleteParams = {
+            TableName: process.env.playerTableName,
+            Key: {
+                player_sub: oldUserAcct.player_sub
+            }
+        };
+        await dynamoDbLib.call("delete", deleteParams);
+        return success({
+            "success": true
+        });
+    } catch (e) {
+        //return the e msg instead
+        console.log(e);
+        return failure({ "success": true, status: e });
+    }
+}
+
+
 // /*
 // * AWS_PROFILE=kunsheng sls invoke local --function list-player-highscores
 // */
