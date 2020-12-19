@@ -64,7 +64,7 @@ functions:
     handler: players.get
     events:
       - http:
-          path: players/{token}
+          path: players/{token} #uuid or token
           method: get
           cors: true
   list-player-highscores:
@@ -115,6 +115,50 @@ functions:
     events:
       - http:
           path: players/{token}
+          method: put
+          cors: true
+
+# MOBILE
+  get-player-mobile:
+    handler: players-mobile.get
+    events:
+      - http:
+          path: players/mobile/{playerId} # uuid or player_sub
+          method: get
+          cors: true
+  add-player-mobile:
+    handler: players-mobile.add
+    events:
+      - http:
+          path: players/mobile
+          method: put
+          cors: true
+  get-qns-mobile:
+    handler: questions-mobile.getNewQnsForPlayer
+    events:
+      - http:
+          path: questions/player/mobile
+          method: post
+          cors: true
+  check-ans-mobile:
+    handler: questions-mobile.checkAnswer
+    events:
+      - http:
+          path: questions/mobile
+          method: post
+          cors: true
+  get-hint-mobile:
+    handler: players-mobile.getHint
+    events:
+      - http:
+          path: players/mobile/{playerId}/{qId}/{new}
+          method: get
+          cors: true
+  transfer-progress-mobile:
+    handler: players-mobile.transferProgress
+    events:
+      - http:
+          path: players/mobile/{playerId}
           method: put
           cors: true
 

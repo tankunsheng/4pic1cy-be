@@ -1,35 +1,14 @@
 
 import * as dynamoDbLib from "./libs/dynamodb-lib";
 import { success, failure } from "./libs/response-lib";
-const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client('498998227385-cvqhp70dbea43jeifi6o7t56g5sbmsa1.apps.googleusercontent.com');
-
-//https://developers.google.com/identity/sign-in/web/backend-auth
-//Refactor into a common lambda function
-async function verify(token) {
-    const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: '498998227385-cvqhp70dbea43jeifi6o7t56g5sbmsa1.apps.googleusercontent.com',
-    });
-    return ticket.getPayload();
-}
+import {addQnsAnsweredInPlayer} from "./questions.js";
 
 // /*
-// * AWS_PROFILE=kunsheng sls invoke local --function check-ans --path mocks/check-answer.json
+// * AWS_PROFILE=kunsheng sls invoke local --function check-ans-mobile --path mocks/check-answer-mobile.json
 // */
 export async function checkAnswer(event) {
     const data = JSON.parse(event.body);
-    // tempId
-    let playerId = "";
-    if(data.token){
-        const user = await verify(data.token).catch(console.error);
-        playerId = user.sub;
-        if (!user) {
-            return;
-        }
-    }else{
-        playerId = data.tempId;
-    }
+    let playerId = data.playerId;
     const params = {
         TableName: process.env.questionTableName,
         Key: {
@@ -52,30 +31,16 @@ export async function checkAnswer(event) {
 }
 
 // /*
-// * AWS_PROFILE=kunsheng sls invoke local --function get-qns --path mocks/get-qns.json
+// * AWS_PROFILE=kunsheng sls invoke local --function get-qns-mobile --path mocks/get-qns-mobile.json
 // */
 export async function getNewQnsForPlayer(event) {
     const data = JSON.parse(event.body);
-    let params = {};
-    if (data.token) {
-        const user = await verify(data.token).catch(console.error);
-        if (!user) {
-            return;
+    let params  = {
+        TableName: process.env.playerTableName,
+        Key: {
+            player_sub: data.playerId
         }
-        params = {
-            TableName: process.env.playerTableName,
-            Key: {
-                player_sub: user.sub
-            }
-        };
-    } else {
-        params = {
-            TableName: process.env.playerTableName,
-            Key: {
-                player_sub: data.tempId
-            }
-        };
-    }
+    };
     try {
         const result = await dynamoDbLib.call("get", params);
         const qns = await getNewQuestion(result.Item.answered);
@@ -111,30 +76,6 @@ async function getNewQuestion(answered) {
         const randomItem = result.Items[randomPos];
         delete randomItem["answer"];
         return success(randomItem);
-    } catch (e) {
-        //return the e msg instead
-        console.log(e);
-        return failure({ status: e });
-    }
-}
-export async function addQnsAnsweredInPlayer(player_sub, qId) {
-    let params = {
-        TableName: process.env.playerTableName,
-        Key: {
-            player_sub: player_sub
-        },
-        UpdateExpression: 'set #answered = list_append(if_not_exists(#answered, :empty_list), :qId)',
-        ExpressionAttributeNames: {
-            '#answered': 'answered'
-        },
-        ExpressionAttributeValues: {
-            ':qId': [qId],
-            ':empty_list': []
-        }
-    };
-    try {
-        await dynamoDbLib.call("update", params);
-        return success(true);
     } catch (e) {
         //return the e msg instead
         console.log(e);

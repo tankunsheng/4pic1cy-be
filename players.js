@@ -251,7 +251,7 @@ export async function getReviews() {
     }
 }
 
-async function newHintForPlayerByQns(playerSub, question) {
+export async function newHintForPlayerByQns(playerSub, question) {
     const randomPos = Math.floor(Math.random() * (3 - 0 + 1) + 0);
     const createEmptyObjectInHintField = {
         TableName: process.env.playerTableName,
