@@ -1,3 +1,21 @@
+# 4pic1cy Backend
+
+Try it out at [https://4pic1cy.com](https://4pic1cy.com)
+
+Do you remember the 4 Pic 1 Word games where you had to work out the commonality between 4 pictures in order to derive a word?
+
+In 4Pic1Cy, the game mechanics remain the same with the difference that you’d be guessing a 成语 (Chinese idiomatic expressions) instead of english words.
+
+This repository contains the backend Vue3 app
+
+## Deploy
+```
+npm install -g serverless
+npm run serverless deploy
+```
+
+---
+
 # Serverless Node.js Starter
 https://serverless-stack.com/chapters/setup-the-serverless-framework.html
 
